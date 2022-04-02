@@ -1,19 +1,29 @@
 /**
- * 问题：一个数字字符串，是由一个升序正整数组成的数组经过Join空字符串后形成，同时这个数组具备最小值尽可能小，前后两个元素大小差也尽量小的特性，现在需要将这个字符串反解成原数组，需要怎样计算？
+ * 问题：一个数字字符串，是由一个升序正整数组成的数组顺序拼接而成，同时这个数组满足以下特性：
+ * 1、首数和尾数的位数差应尽量最小，即优先使得元素尽量均匀分布
+ * 2、在满足条件1的情况下，首数应尽量小，即在满足均匀分布的情况下尽量拆分成更多元素
+ * 现在需要将这个数字字符串还原成数组，需要怎样计算？
  * 举例：
- * "01234567891011" => [0,1,2,3,4,5,6,7,8,9,10,11]
- * "121131" => [1,2,11,31]
+ * "1234567891011" => [1,2,3,4,5,6,7,8,9,10,11] => 最小值尽量小
+ * "121131" => [1,2,11,31] => 前后元素差尽量小
  * "13579121131" => [1,3,5,7,9,12,1131]
+ *
  */
 export default (str) => {
-  const total = str.length;
-  const half = Math.floor(total / 2);
-  return (function calc(startLen = 1, startIndex = 0) {
+  let total = str.length;
+  let beginWithZero = false;
+  if (str.charAt(0) === "0") {
+    total--;
+    str = str.slice(1);
+    beginWithZero = true;
+  }
+  const result = (function calc(startLen = 1, startIndex = 0) {
     // 先求出首数
     let i = startIndex + startLen;
     let min = Number(str.slice(startIndex, i));
     let result = [min];
     let minLen = startLen;
+    const half = Math.floor((total - startIndex) / 2);
     while (i < total) {
       // 如果首位为0，则表示这不是下一个数的开头
       // 而只能为上一个数的结尾或中间部分
@@ -40,7 +50,9 @@ export default (str) => {
       // 进位后剩余的字符串当成子问题解决
       if (endIndex < total) {
         const nextResult = calc(minLen + 1, i);
-        return nextResult ? result.concat(nextResult) : nextResult;
+        if (nextResult) {
+          return result.concat(nextResult);
+        }
       }
       // 如果初始长度小于半数值
       // 则还可以继续尝试
@@ -52,4 +64,8 @@ export default (str) => {
     }
     return result;
   })();
+  if (result && beginWithZero) {
+    result.unshift(0);
+  }
+  return result;
 };
